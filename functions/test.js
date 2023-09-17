@@ -9,6 +9,47 @@ app.use(cors());
 app.use(express.json());
 
 const OUR_BANK_ID = "8dead91f-8c05-4f91-a4d8-7b60446a21a7";
+const baseURL =
+  "http://money-request-app.canadacentral.cloudapp.azure.com:8080/api/v1";
+
+app.get("/getMoneyRequests", async (req, res) => {
+  try {
+    // const testrun = OUR_BANK_ID;
+    const testrun = "bfc2fa81-9c16-4fd5-a4c1-b71b23bf85f7";
+    // get clientId from search query
+    const clientId = req.query.clientId || testrun;
+
+    const apiResponse = await axios.get(
+      `http://money-request-app.canadacentral.cloudapp.azure.com:8080/api/v1/money-request`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          "x-signed-on-client": clientId,
+        },
+      }
+    );
+
+    res.status(200).json(apiResponse.data);
+  } catch (error) {
+    console.error("Error fetching money requests:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+app.post("/create-payment-intent", async (req, res) => {
+  const { amount } = req.body; // Extract amount from request body
+
+  try {
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: amount, // Use the variable amount
+      currency: "usd",
+    });
+
+    res.json({ clientSecret: paymentIntent.client_secret });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 app.post("/requestMoney", async (req, res) => {
   try {
@@ -16,7 +57,7 @@ app.post("/requestMoney", async (req, res) => {
     const clientId = OUR_BANK_ID;
 
     const apiResponse = await axios.post(
-      "http://money-request-app.canadacentral.cloudapp.azure.com:8080/api/v1/money-request",
+      `${baseURL}/money-request`,
       {
         amount,
         requesteeId,
@@ -51,7 +92,7 @@ app.post("/createBankClient", async (req, res) => {
     let existingClientResponse;
     try {
       existingClientResponse = await axios.get(
-        `http://money-request-app.canadacentral.cloudapp.azure.com:8080/api/v1/client?email=${email}`,
+        `${baseURL}/client?email=${email}`,
         {
           headers: {
             "client-header": clientId,
@@ -69,7 +110,7 @@ app.post("/createBankClient", async (req, res) => {
 
     // Create a new client if it doesn't exist
     const apiResponse = await axios.post(
-      "http://money-request-app.canadacentral.cloudapp.azure.com:8080/api/v1/client",
+      `${baseURL}/client`,
       { Name: name, EmailAddress: email },
       { headers: { "Content-Type": "application/json" } }
     );
