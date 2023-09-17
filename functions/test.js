@@ -17,7 +17,7 @@ app.get("/getMoneyRequests", async (req, res) => {
     // const testrun = OUR_BANK_ID;
     const testrun = "bfc2fa81-9c16-4fd5-a4c1-b71b23bf85f7";
     // get clientId from search query
-    const clientId = req.query.clientId || testrun;
+    const clientId = req.query.clientId || OUR_BANK_ID;
 
     const apiResponse = await axios.get(
       `http://money-request-app.canadacentral.cloudapp.azure.com:8080/api/v1/money-request`,
